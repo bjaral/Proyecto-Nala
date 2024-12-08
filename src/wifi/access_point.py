@@ -16,7 +16,6 @@ def escanear_redes():
     return redes
 
 def configurar_access_point(ssid, password):
-    # Configuración del access point
     hostapd_config = f"""
     interface=wlan0
     driver=nl80211
@@ -44,14 +43,12 @@ def configurar_access_point(ssid, password):
     os.system("sudo systemctl restart dnsmasq")
     print("Servidor DHCP iniciado.")
 
-
 if __name__ == '__main__':
-    escanearAlrededores=escanear_redes
-    redes_existentes = escanearAlrededores
+    redes_existentes = escanear_redes()
     while True:
-        ssid = input("Ingresa el nombre del punto de acceso SSID : ")
+        ssid = input("Ingresa el nombre del punto de acceso SSID: ")
         if ssid in redes_existentes:
-            print("Este SSID ya existe,ingresar otro nombre.")
+            print("Este SSID ya existe, ingresa otro nombre.")
         else:
             break
     password = input("Ingresa la contraseña para la red: ")

@@ -1,6 +1,8 @@
+import os
 #hay que instalar un dhcp
 #preguntar al profe de esta parte del codigo, no si se realmente este correcto lo que estoy haciendo, aclar duda en la clase del martes URGENTE
 # sudo apt-get update
+#os.system(sudo apt-get update)
 #sudo apt-get install dnsmasq
 #Configuracion del dnsmasq
 #interface=wlan0              # Usa la interfaz wlan0 (puedes cambiarla si es necesario)
