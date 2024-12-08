@@ -39,12 +39,10 @@ def configurar_access_point(ssid, password):
         print(f"Error al configurar hostapd: {e}")
 
     os.system("sudo systemctl restart hostapd")
-    print(f"Punto de acceso '{ssid}' configurado y activado.")
     os.system("sudo systemctl restart dnsmasq")
-    print("Servidor DHCP iniciado.")
 
 if __name__ == '__main__':
-    redes_existentes = escanear_redes()
+    redes_existentes = escanear_redes()  # Aquí se llama la función y no se asigna la función
     while True:
         ssid = input("Ingresa el nombre del punto de acceso SSID: ")
         if ssid in redes_existentes:
