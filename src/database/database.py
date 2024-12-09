@@ -129,7 +129,7 @@ def main():
         conexion = psycopg2.connect(
             host="localhost",
             database="redes_bd",
-            user="artemisa2020",
+            user="artemisa-2020",
             password="**nikita"
         )
         conexion.autocommit = True
