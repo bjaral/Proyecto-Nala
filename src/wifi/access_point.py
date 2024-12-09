@@ -1,53 +1,44 @@
 import os
-import subprocess
+import threading
 
-def escanear_redes():
-    print("Escaneando redes Wi-Fi disponibles en los alrededores")
-    redes = set()
-    try:
-        resultado = subprocess.check_output(["sudo", "iwlist", "wlan0", "scan"], universal_newlines=True)
-        for linea in resultado.split("\n"):
-            if "ESSID" in linea:
-                ssid = linea.split(":")[1].strip('"')
-                if ssid:
-                    redes.add(ssid)
-    except Exception as e:
-        print(f"Error al escanear redes: {e}")
-    return redes
+# Configuración de hostapd (Punto de acceso Wi-Fi)
+hostapd_config = f"""
+interface=ap0
+ssid=sincomilla
+wpa_passphrase=12345678
+driver=nl80211
+hw_mode=g
+channel=6
+wpa=2
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=CCMP
+rsn_pairwise=CCMP
+"""
 
-def configurar_access_point(ssid, password):
-    hostapd_config = f"""
-    interface=wlan0
-    driver=nl80211
-    ssid={ssid}
-    hw_mode=g
-    channel=6
-    macaddr_acl=0
-    auth_algs=1
-    ignore_broadcast_ssid=0
-    wpa=2
-    wpa_passphrase={password}
-    wpa_key_mgmt=WPA-PSK
-    wpa_pairwise=CCMP
-    rsn_pairwise=CCMP
-    """
-    try:
-        with open('/etc/hostapd/hostapd.conf', 'w') as file:
-            file.write(hostapd_config)
-        print("Configuración de hostapd completada.")
-    except Exception as e:
-        print(f"Error al configurar hostapd: {e}")
+# Función para iniciar hostapd
+def init_hostapd():
+    # Crear el archivo de configuración de hostapd
+    with open('/etc/hostapd/hostapd.conf', 'w') as file:
+        file.write(hostapd_config)
 
-    os.system("sudo systemctl restart hostapd")
-    os.system("sudo systemctl restart dnsmasq")
+    # Iniciar hostapd para crear el punto de acceso
+    os.system("sudo hostapd /etc/hostapd/hostapd.conf")
 
-if __name__ == '__main__':
-    redes_existentes = escanear_redes()  # Aquí se llama la función y no se asigna la función
-    while True:
-        ssid = input("Ingresa el nombre del punto de acceso SSID: ")
-        if ssid in redes_existentes:
-            print("Este SSID ya existe, ingresa otro nombre.")
-        else:
-            break
-    password = input("Ingresa la contraseña para la red: ")
-    configurar_access_point(ssid, password)
+# Función para configurar dnsmasq (DHCP y DNS)
+def DHCP_DNS():
+    # Configurar dnsmasq para proporcionar DHCP y DNS
+    os.system("sudo dnsmasq -C /dev/null -kd -F 192.168.4.2,192.168.4.20 -i ap0 --bind-dynamic")
+
+# Crear hilos para ejecutar ambas funciones simultáneamente
+hilo1 = threading.Thread(target=init_hostapd)
+hilo2 = threading.Thread(target=DHCP_DNS)
+
+# Iniciar los hilos
+hilo1.start()
+hilo2.start()
+
+# Habilitar el reenvío de IP para permitir el acceso a Internet
+os.system("sudo sysctl net.ipv4.ip_forward=1")
+
+# Configurar NAT para el enrutamiento de paquetes
+os.system("sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE")
